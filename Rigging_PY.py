@@ -1,7 +1,13 @@
 import maya.cmds as mc 
 
-#class skeleton:
+def createSkeleton():
+    createJoint((), 'c', '')
 
-    #def Spine():
-mc.joint(position=[0,6.108,0], name = 'waist')
-        #mc.joint(position=[-0.625,5.469,0], name = 'RightUpLeg')
+
+def createJoints(pos, alignment, name):
+    mc.select(cl = True)
+    mc.joint(p=pos, n= alignment + '__' = name + '__' + 'JNT')
+
+
+
+createSkeleton()
