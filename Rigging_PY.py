@@ -1,6 +1,7 @@
 import maya.cmds as mc
 
 def createSkeleton():
+<<<<<<< HEAD
     #spine
     createJoints((0,6.108,0), 'c', 'waist', 'BIND')
     createJoints((0,6.792,0), 'c', 'Spine1', 'BIND')
@@ -51,3 +52,15 @@ createSkeleton()
 
 
 createJoints((0,0,0), 'L', '', 'BIND')
+=======
+    createJoint((), 'c', '')
+
+
+def createJoints(pos, alignment, name):
+    mc.select(cl = True)
+    mc.joint(p=pos, n= alignment + '__' = name + '__' + 'JNT')
+
+
+
+createSkeleton()
+>>>>>>> feaf809ad17071e2f942f44030846a1b92ccbb5b
