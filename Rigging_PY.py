@@ -1,5 +1,21 @@
 import maya.cmds as mc
 
+##---------------------------SkeletonJoints-------------------------------##
+
+def createJoints(pos, alignment, name, suffix, radius=0.1, parent=None):
+
+    if parent:
+        mc.select(parent)
+    else:
+        mc.select(clear=True)
+
+    joint_name = f"{alignment}__{name}__JNT__{suffix}"
+    joint = mc.joint(p=pos, n=joint_name, radius=radius)
+
+    print(f"Created joint: {joint} (radius={radius})")
+    return joint
+
+
 def createSkeleton():
 
     #centerjoints
@@ -85,56 +101,123 @@ def createSkeleton():
     LeftFoot = createJoints((0.95,0.67,0), 'L', 'LeftFoot', 'BIND', parent=LeftLeg)
     LeftFootEnd = createJoints((1.13,-0.009,0.774), 'L', 'LeftFootEnd', 'END', parent=LeftFoot)
 
-def createJoints(pos, alignment, name, suffix, radius=0.1, parent=None):
 
-    if parent:
-        mc.select(parent)
-    else:
-        mc.select(clear=True)
+def lockToCenter():
+    mc.select('C_*_JNT')
+    selJNTS = mc.Is(sl=True)
+    for jnt in selJNTS:
+        mc.setAttr(jnt + '.tx', lock = True, keyable = True, channelBox = False)
 
-    joint_name = f"{alignment}__{name}__JNT__{suffix}"
-    joint = mc.joint(p=pos, n=joint_name, radius=radius)
+def UnlockCentre():
+    mc.select('C_*_JNT')
+    selJNTS = mc.Is(sl=True)
+    for jnt in selJNTS:
+        mc.setAttr(jnt + '.tx', lock = False, keyable = True, channelBox = False)
 
-    print(f"Created joint: {joint} (radius={radius})")
-    return joint
+def createSkeletonBase():
+    createSkeleton()
+    createJoints()
+    lockToCenter()
+    mc.select(cl=True)
 
- 
-createSkeleton()
+##--------------------------------Bind Skin----------------------------------##
 
-# def myUI():
-#     if mc.window("myWindow", exists=True):
-#         mc.deleteUI("myWindow")
+def BindSkin():
+    sel = mc.ls(selection=True)
 
-#     # Create window
-#     window = mc.window("myWindow", title="Simple UI", widthHeight=(300, 150))
+    if not sel or len(sel) < 2:
+        mc.warning("Select one or more meshes FIRST, then the skeleton root joint(s).")
+        return
 
-#     # Layout
-#     mc.columnLayout(adjustableColumn=True, rowSpacing=10)
+    # Separate meshes and joints
+    meshes = []
+    root_joints = []
 
-#     # Buttons
-#     for i in range(1, 6):
-#         mc.button(label=f"Button {i}", command=lambda x, i=i: print(f"Button {i} clicked"))
+    for obj in sel:
+        shapes = mc.listRelatives(obj, shapes=True, fullPath=True) or []
+        if shapes and mc.nodeType(shapes[0]) == "mesh":
+            meshes.append(obj)
+        elif mc.nodeType(obj) == "joint":
+            root_joints.append(obj)
 
-#     # Slider
-#     mc.text(label="Adjust Value:")
-#     mc.floatSlider(min=0.0, max=10.0, value=5.0, step=0.1, dragCommand=lambda val: print(f"Slider value: {val}"))
+    if not meshes:
+        mc.warning("No valid meshes selected.")
+        return
+    if not root_joints:
+        mc.warning("No joints selected.")
+        return
 
-#     mc.showWindow(window)
+    children_joints = mc.listRelatives(allDescendents=True, type='joint')
+    mc.select(children_joints, add=True)
 
-# # Run the UI
-# myUI()
+    if not children_joints:
+        mc.warning("No joints found under selected roots.")
+        return
 
-class CPAT(QMainWindow):
+    for mesh in meshes:
+        try:
+            skin_name = f"{mesh}_skinCluster"
+            if mc.objExists(skin_name):
+                mc.delete(skin_name)
 
+            mc.select(clear=True)
+
+            mc.skinCluster(
+                children_joints,  
+                mesh,
+                toSelectedBones=False,
+                maximumInfluences=4,
+                normalizeWeights=1,
+                name=skin_name
+            )
+
+            print(f"Bound '{mesh}' to {len(children_joints)} joints successfully.")
+        except Exception as e:
+            mc.warning(f"⚠️ Failed to bind '{mesh}': {e}")
+
+    print("Skin binding complete.")
+
+##--------------------------------Delete history----------------------------##
+
+def DeleteHistory():
+    sel = mc.ls(selection=True)
+    cmds.delete(sel, constructionHistory = True)
+
+    print("History has been deleted.")
+
+
+
+
+
+##--------------------------------UI----------------------------------##
+
+class SimpleUI:
     def __init__(self):
-        super().__init__()
-        self.setWindow
+        
+        if mc.window("simpleUIWin", exists=True):
+            mc.deleteUI("simpleUIWin")
 
+        self.window = mc.window("simpleUIWin", title="Simple UI", widthHeight=(200, 100))
+        mc.columnLayout(adjustableColumn=True, rowSpacing=10)
 
+        #buttons
+        mc.button(label="Spawn Skeleton",
+            command = 'createSkeletonBase()',
+            height=40)
+        mc.button(label="Bind Skin",
+            command = 'BindSkin()',
+            height=40)
+        mc.button(label="Delete Selected History",
+            command = 'DeleteHistory()',
+            height=40)
 
+        
+        mc.showWindow(self.window)
 
+    def on_button_click(self, *args):
+        """This runs when the button is clicked."""
+        print("Button was clicked!")
 
-
-
-
+# Run the UI
+SimpleUI()
 
