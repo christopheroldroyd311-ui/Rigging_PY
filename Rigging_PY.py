@@ -186,7 +186,7 @@ def BindSkin():
 
             print(f"Bound '{mesh}' to {len(children_joints)} joints successfully.")
         except Exception as e:
-            mc.warning(f"⚠️ Failed to bind '{mesh}': {e}")
+            mc.warning(f" Failed to bind")
 
     print("Skin binding complete.")
 
@@ -198,6 +198,22 @@ def DeleteHistory():
     cmds.delete(sel, constructionHistory = True)
 
     print("History has been deleted.")
+
+##--------------------------------Weight painting--------------------------------##
+
+def WeightPaint():
+    selection = cmds.ls(selection=True, type='transform')
+
+    if not selection:
+        cmds.error("Please sekect mesh first to paint.")
+        return
+
+    skeletonRoot = "c__waist__JNT__BIND"
+
+
+
+
+
 
 
 
@@ -211,13 +227,15 @@ class SimpleUI:
         if mc.window("simpleUIWin", exists=True):
             mc.deleteUI("simpleUIWin")
 
-        self.window = mc.window("simpleUIWin", title="Simple UI", widthHeight=(200, 100))
+        self.window = mc.window("simpleUIWin", title="Simple Humanoid Rigger", widthHeight=(200, 100))
         mc.columnLayout(adjustableColumn=True, rowSpacing=10)
 
         #buttons
+        cmds.text( label = '<font size="6">Rigging Tool</font>', align='center', bgc=[0.1, 0.1, 0.1])
+
         mc.floatSliderGrp(
             "scaleSlider",
-            label="Scale",
+            label="Size of skeleton",
             field=True,
             minValue=0.1,
             maxValue=5.0,
@@ -226,17 +244,17 @@ class SimpleUI:
    
         
         mc.button(label="Spawn Skeleton",
-          command=lambda *_: createSkeleton(
-            scale=mc.floatSliderGrp("scaleSlider", q=True, value=True)))
+            command=lambda *_: createSkeleton(
+            scale=mc.floatSliderGrp("scaleSlider", q=True, value=True,  height=40)))
 
 
         mc.button(label="Bind Skin",
             command = 'BindSkin()',
             height=40)
+
         mc.button(label="Delete Selected History",
             command = 'DeleteHistory()',
             height=40)
-
 
         mc.showWindow(self.window)
 
@@ -244,6 +262,9 @@ class SimpleUI:
         """This runs when the button is clicked."""
         print("Button was clicked!")
 
+
 # Run the UI
 SimpleUI()
+
+
 
