@@ -202,17 +202,51 @@ def DeleteHistory():
 ##--------------------------------Weight painting--------------------------------##
 
 def WeightPaint():
-    selection = cmds.ls(selection=True, type='transform')
+    if not cmds.pluginInfo('artDeformers', query=True, loaded=True):
+        try:
+            cmds.loadPlugin('artDeformers')
+            print(" Loaded 'artDeformers' plugin.")
+        except Exception as e:
+            cmds.error(f" Could not load 'artDeformers' plugin")
+            return
 
+    # ---- Step 2: Get selection ----
+    selection = cmds.ls(selection=True, type='transform')
     if not selection:
-        cmds.error("Please sekect mesh first to paint.")
+        cmds.error("Please select one or more skinned meshes.")
         return
 
-    skeletonRoot = "c__waist__JNT__BIND"
+    valid_meshes = []
 
+    for obj in selection:
+        shapes = cmds.listRelatives(obj, shapes=True, type='mesh') or []
+        if not shapes:
+            cmds.warning(f"Skipping '{obj}': no mesh shape found.")
+            continue
 
+        # Check if it has a skinCluster
+        history = cmds.listHistory(obj) or []
+        skins = cmds.ls(history, type='skinCluster')
+        if not skins:
+            cmds.warning(f"Skipping '{obj}': no skinCluster found.")
+            continue
 
+        valid_meshes.append(obj)
 
+    if not valid_meshes:
+        cmds.error("No valid skinned meshes selected.")
+        return
+
+    # ---- Step 3: Open Paint Skin Weights Tool ----
+    try:
+        mel.eval('artPaintSkinWeightsTool;')
+    except Exception as e:
+        cmds.error(f" Could not open Paint Skin Weights Tool: {e}")
+        return
+
+    # Select the last valid mesh for painting
+    cmds.select(valid_meshes[-1])
+    print(f" Opened Paint Skin Weights Tool for '{valid_meshes[-1]}'.")
 
 
 
@@ -254,6 +288,10 @@ class SimpleUI:
 
         mc.button(label="Delete Selected History",
             command = 'DeleteHistory()',
+            height=40)
+
+        mc.button(label="Weight Paint Skin",
+            command = 'WeightPaint()',
             height=40)
 
         mc.showWindow(self.window)
