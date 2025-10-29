@@ -1,19 +1,35 @@
 print ("Loading userSetup Script")
 
-###### For Development with VSCODE #####
 print ("Loading VSCODE Plugin Command Ports")
 
 import maya.cmds as cmds
 
-cmds.commandPort(name="localhost:5678", stp="python")
-cmds.commandPort(name="localhost:7001", stp="mel")
+import maya.utils
 
-##### Start up Code for my Tool ######
+def open_ports():
+    import maya.cmds as cmds  
+    try:
+        for port, stp in [(5678, "python"), (7001, "mel")]:
+            port_name = f"localhost:{port}"
+            
+            if cmds.commandPort(name=f":{port}", q=True):
+                cmds.commandPort(name=f":{port}", close=True)
+            
+            cmds.commandPort(name=port_name, stp=stp)
+            print(f"[userSetup] Opened command port: {port_name}")
+    except Exception as e:
+        print(f"[userSetup] Failed to open command ports: {e}")
+
+
+maya.utils.executeDeferred(open_ports)
+
+
+maya.utils.executeDeferred(open_ports)
+
+
 print ("Loading My Maya Tool")
 
-# import maya.utils
-
-from MTool import Rigging_PY as mTool
+import Rigging_PY as mTool
 
 def ToolStartup():
 

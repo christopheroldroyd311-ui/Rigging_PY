@@ -1,4 +1,4 @@
-from maya import cmds
+from maya.cmds import cmds
 import Rigging_PY as mtool
 
 print ("Maya Tool Menu Module was Loaded")

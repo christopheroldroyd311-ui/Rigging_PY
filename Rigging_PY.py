@@ -318,55 +318,76 @@ def LaunchNonDockableWindow():
 
 class SimpleUI:
     def __init__(self):
-        
-        import maya.cmds as cmds
-        self.cmds = cmds
 
-        if mc.window("simpleUIWin", exists=True):
-            mc.deleteUI("simpleUIWin")
+        def BuildWindowUI(parent=None):
+            # build main tool UI here
+            if cmds.window("simpleUIWin", exists=True):
+                cmds.deleteUI("simpleUIWin", menu=True)
 
-        self.window = mc.window("simpleUIWin", title="Simple Humanoid Rigger", widthHeight=(200, 100))
-        mc.columnLayout(adjustableColumn=True, rowSpacing=10)
+            self.window = cmds.window("simpleUIWin", title="Simple Humanoid Rigger", widthHeight=(200, 100))
+            cmds.columnLayout(adjustableColumn=True, rowSpacing=10)
 
-        #buttons
-        mc.text( label = '<font size="6">Rigging Tool</font>', align='center', bgc=[0.1, 0.1, 0.1])
+            cmds.text(label='<font size="6">Rigging Tool</font>', align='center', bgc=[0.1, 0.1, 0.1])
 
-        mc.floatSliderGrp(
-            "scaleSlider",
-            label="Size of skeleton",
-            field=True,
-            minValue=0.1,
-            maxValue=5.0,
-            value=1.0,
-            step=0.1)
-   
-        
-        mc.button(label="Spawn Skeleton",
-            command=lambda *_: createSkeleton(
-            scale=mc.floatSliderGrp("scaleSlider", q=True, value=True,  height=40)))
+            cmds.floatSliderGrp(
+                "scaleSlider",
+                label="Size of skeleton",
+                field=True,
+                minValue=0.1,
+                maxValue=5.0,
+                value=1.0,
+                step=0.1
+            )
 
+            cmds.button(
+                label="Spawn Skeleton",
+                command=lambda *_: createSkeleton(
+                    scale=cmds.floatSliderGrp("scaleSlider", q=True, value=True)
+                ),
+                height=40
+            )
 
-        mc.button(label="Bind Skin",
-            command = 'BindSkin()',
-            height=40)
+            cmds.button(label="Bind Skin", command=lambda *_: BindSkin(), height=40)
+            cmds.button(label="Delete Selected History", command=lambda *_: DeleteHistory(), height=40)
+            cmds.button(label="Weight Paint Skin", command=lambda *_: WeightPaint(), height=40)
 
-        mc.button(label="Delete Selected History",
-            command = 'DeleteHistory()',
-            height=40)
+            cmds.showWindow(self.window)
 
-        mc.button(label="Weight Paint Skin",
-            command = 'WeightPaint()',
-            height=40)
+        def LaunchDockableWindow():
+            maya_ctrl_window = "w_dock_maya_ui"
 
-        mc.showWindow(self.window)
+            if cmds.workspaceControl(maya_ctrl_window, exists=True):
+                cmds.deleteUI(maya_ctrl_window)
 
-    def on_button_click(self, *args):
-        """This runs when the button is clicked."""
-        print("Button was clicked!")
+            cmds.workspaceControl(maya_ctrl_window, label="My Maya Dockable Tool",
+                                  widthProperty="fixed", initialWidth=300, retain=False)
+            BuildWindowUI()
+
+        def LaunchNonDockableWindow():
+            maya_window = 'w_maya_ui'
+            if cmds.window(maya_window, ex=True):
+                cmds.deleteUI(maya_window, window=True)
+
+            cmds.window(maya_window, title='My Maya Tool', widthHeight=(500, 600))
+            BuildWindowUI()
+            cmds.showWindow(maya_window)
+
+        def LaunchToolWindow(Dockable=False):
+            if Dockable:
+                LaunchDockableWindow()
+            else:
+                LaunchNonDockableWindow()
+
+        # launch default window
+        LaunchToolWindow(Dockable=False)
+
 
 
 # Run the UI
 SimpleUI()
+
+
+
 
 
 
