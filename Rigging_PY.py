@@ -1,5 +1,9 @@
 import maya.cmds as mc
+import maya.cmds as cmds
 import maya.mel as mel
+
+
+print("maya module was loaded")
 
 ##---------------------------SkeletonJoints-------------------------------##
 
@@ -250,6 +254,62 @@ def WeightPaint():
     print(f" Opened Paint Skin Weights Tool for '{valid_meshes[-1]}'.")
 
 
+##--------------------------Single Function to Launch Dockable or Non Dockable-----------------------------------##
+
+def LaunchWindow(Dockable = False):
+    maya_window_id = "w_maya_ui"
+
+    if Dockable:
+        maya_window_id += "_dock"
+        if cmds.workspaceControl(maya_window_id, exists=True):
+            cmds.deleteUI(maya_window_id)
+
+        cmds.workspaceControl(maya_window_id, label= "My Maya Dockable Tool", widthProperty="fixed", initialWidth=300, retain=False)
+    else:
+        maya_window_id = 'w_maya_ui'
+        if cmds.window(maya_window_id, ex=True):
+            cmds.deleteUI(maya_window_id, window = True)
+
+        cmds.window(maya_window_id, title='My Maya Tool', widthHeight=(500,600))
+    
+    SimpleUI()
+
+    if not Dockable:
+        cmds.showWindow(maya_window_id)
+
+def LaunchToolWindow(Dockable = False):
+    if Dockable:
+        LaunchDockableWindow()
+    else:
+        LaunchNonDockableWindow()
+
+def LaunchDockableWindow():
+    maya_ctrl_window = "w_dock_maya_ui"
+
+    if cmds.workspaceControl(maya_ctrl_window, exists=True):
+        cmds.deleteUI(maya_ctrl_window)
+
+    cmds.workspaceControl(maya_ctrl_window, label= "My Maya Dockable Tool", widthProperty="fixed", initialWidth=300, retain=False)
+
+    SimpleUI()
+
+def LaunchNonDockableWindow():
+    maya_window = 'w_maya_ui'
+    if cmds.window(maya_window, ex=True):
+        cmds.deleteUI(maya_window, window = True)
+
+    cmds.window(maya_window, title='My Maya Tool', widthHeight=(500,600))
+
+    SimpleUI()
+
+    # show window
+    cmds.showWindow(maya_window)
+
+
+
+
+
+
 
 
 
@@ -259,6 +319,9 @@ def WeightPaint():
 class SimpleUI:
     def __init__(self):
         
+        import maya.cmds as cmds
+        self.cmds = cmds
+
         if mc.window("simpleUIWin", exists=True):
             mc.deleteUI("simpleUIWin")
 
@@ -266,7 +329,7 @@ class SimpleUI:
         mc.columnLayout(adjustableColumn=True, rowSpacing=10)
 
         #buttons
-        cmds.text( label = '<font size="6">Rigging Tool</font>', align='center', bgc=[0.1, 0.1, 0.1])
+        mc.text( label = '<font size="6">Rigging Tool</font>', align='center', bgc=[0.1, 0.1, 0.1])
 
         mc.floatSliderGrp(
             "scaleSlider",
